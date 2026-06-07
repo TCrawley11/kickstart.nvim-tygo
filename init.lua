@@ -1,4 +1,3 @@
--- NOTE: Must happen before plugins are loaded (otherwise wrong leader will be used)
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
@@ -566,7 +565,16 @@ require('lazy').setup({
       local servers = {
         -- clangd = {},
         -- gopls = {},
-        pyright = {},
+        pyright = {
+          before_init = function(_, config)
+            local venv_python = config.root_dir .. '/.venv/bin/python'
+            if vim.fn.executable(venv_python) == 1 then
+              config.settings = config.settings or {}
+              config.settings.python = config.settings.python or {}
+              config.settings.python.pythonPath = venv_python
+            end
+          end,
+        },
         -- rust_analyzer = {},
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
         --
@@ -769,17 +777,15 @@ require('lazy').setup({
     },
   },
 
-  { -- You can easily change to a different colorscheme.
-    -- Change the name of the colorscheme plugin below, and then
-    -- change the command in the config to whatever the name of that colorscheme is.
-    --
-    -- If you want to see what colorschemes are already installed, you can use the picker via `<leader>uC`.
-    'Aejkatappaja/sora',
-    lazy = false,
-    priority = 1000, -- Make sure to load this before all the other start plugins.
+  { -- Kanagawa Paper colorscheme
+    -- Plugin specs use 'owner/repo' format from GitHub.
+    -- priority = 1000 ensures this loads before other plugins at startup.
+    'sho-87/kanagawa-paper.nvim',
+    priority = 1000,
     config = function()
-      require('sora').setup()
-      vim.cmd.colorscheme 'sora'
+      require('kanagawa-paper').setup()
+      -- 'kanagawa-paper-ink' is the dark variant; other options: 'kanagawa-paper'
+      vim.cmd.colorscheme 'kanagawa-paper-ink'
     end,
   },
 
@@ -870,6 +876,15 @@ require('lazy').setup({
   --
   --  Uncomment the following line and add your plugins to `lua/custom/plugins/*.lua` to get going.
   -- { import = 'custom.plugins' },
+
+  {
+    'linux-cultist/venv-selector.nvim',
+    dependencies = { 'neovim/nvim-lspconfig', 'nvim-telescope/telescope.nvim' },
+    opts = {},
+    keys = {
+      { '<leader>vs', '<cmd>VenvSelect<cr>', desc = '[V]env [S]elect' },
+    },
+  },
   --
   -- For additional information with loading, sourcing and examples see `:help lazy.nvim-🔌-plugin-spec`
   -- Or use the picker!
